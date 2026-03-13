@@ -1,0 +1,12 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" fill="black"/>
+  <!-- Central plain wall area -->
+  <rect x="180" y="0" width="844" height="650" fill="white"/>
+  <!-- Cutout for the mirror (approx right side) and vanity? -->
+  <!-- Mirror approx x=760, y=170, circle with radius 150 -->
+  <circle cx="840" cy="300" r="160" fill="black"/>
+  <!-- Bathtub area approx bottom-left corner of the wall -->
+  <rect x="0" y="600" width="1024" height="424" fill="black"/>
+  <!-- Exclude the window (left side) -->
+  <rect x="0" y="0" width="180" height="1024" fill="black"/>
+</svg>

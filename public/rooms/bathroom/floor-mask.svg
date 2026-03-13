@@ -1,0 +1,6 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" fill="black"/>
+  <!-- Floor area at the bottom -->
+  <polygon points="0,650 1024,650 1024,1024 0,1024" fill="white"/>
+  <!-- Remove bathtub (left) and vanity (right) footprints if necessary, for now keeping it simple -->
+</svg>
