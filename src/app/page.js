@@ -1,156 +1,166 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import RoomViewer from '@/components/RoomViewer';
 
-const CLASSIC_BATHROOM = {
-  id: 'living_room',
-  title: 'Classic Living Room',
-  roomUrl: '/rooms/living_room/room.jpg',
-  wallMaskUrl: null,
-  floorMaskUrl: '/rooms/living_room/floor-mask.jpeg',
-  floorMaskInvert: true,
-  floorQuad: [[0.2, 0.54], [0.8, 0.54], [1.15, 1.0], [-0.15, 1.0]],
-  tileScale: 1.0,
-};
-
-const FEATURES = [
-  {
-    title: 'Photoreal room preview',
-    description: 'Project tiles into room perspective with natural light blending so customers see realistic finishes before buying.',
-  },
-  {
-    title: 'Instant texture switching',
-    description: 'Compare marble, wood, ceramic, and custom uploads in seconds without reloading the experience.',
-  },
-  {
-    title: 'Sales-ready workflow',
-    description: 'Send guided visual selections to clients and move from inspiration to quote faster.',
-  },
+const DEMO_ROOMS = [
+  { id: 'living_room', title: 'Modern Bathroom', roomUrl: '/rooms/living_room/room.jpg', floorMaskUrl: '/rooms/living_room/floor-mask.jpeg', floorMaskInvert: true, floorQuad: [[0.2, 0.54], [0.8, 0.54], [1.15, 1.0], [-0.15, 1.0]], tileScale: 1.0 },
+  { id: 'living_room', title: 'Contemporary Kitchen', roomUrl: '/rooms/living_room/room.jpg', floorMaskUrl: '/rooms/living_room/floor-mask.jpeg', floorMaskInvert: true, floorQuad: [[0.2, 0.54], [0.8, 0.54], [1.15, 1.0], [-0.15, 1.0]], tileScale: 1.0 },
+  { id: 'living_room', title: 'Minimalist Bathroom', roomUrl: '/rooms/living_room/room.jpg', floorMaskUrl: '/rooms/living_room/floor-mask.jpeg', floorMaskInvert: true, floorQuad: [[0.2, 0.54], [0.8, 0.54], [1.15, 1.0], [-0.15, 1.0]], tileScale: 1.0 },
 ];
 
-const STEPS = [
-  { title: '1. Upload texture', description: 'Add a tile image and metadata to your library in minutes.' },
-  { title: '2. Preview in room', description: 'Apply materials to your scene and tune scale for accurate appearance.' },
-  { title: '3. Convert to quote', description: 'Share approved visuals and generate sample or quote requests.' },
-];
+const CURRENT_TILE_LABEL = 'Metro Gloss White';
 
 export default function Home() {
-  const activeRoom = CLASSIC_BATHROOM;
+  const [dragOver, setDragOver] = useState(false);
+  const [previewRoom] = useState(DEMO_ROOMS[0]);
+
+  const onDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+  const onDragLeave = useCallback(() => setDragOver(false), []);
+  const onDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file?.type?.startsWith('image/')) {
+      // Could set uploaded image as room preview / pass to visualization
+    }
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#f5f5f5,_#ffffff_40%,_#fafafa)] text-neutral-900">
-      <div className="mx-auto max-w-7xl px-6 py-10 md:py-14">
-        <header className="mb-12 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <p className="text-sm font-semibold tracking-tight">TilePro Gen</p>
-          </div>
-          <Link
-            href={`/visualization?room=${activeRoom.id}`}
-            className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-          >
-            Open App
-          </Link>
-        </header>
+    <main className="min-h-screen bg-white text-neutral-800">
+      {/* Header: Victorian Plumbing logo on black */}
+      <header className="px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center">
+          <Image
+            src="/logo.png"
+            alt="Victorian Plumbing.co.uk"
+            width={200}
+            height={52}
+            className="h-10 w-auto object-contain object-left"
+            priority
+          />
+        </div>
+      </header>
+      <div className="mx-auto max-w-6xl px-6 py-6">
 
-        <section className="grid gap-8 lg:grid-cols-2 lg:items-center">
-          <div>
-            <p className="inline-flex rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600">
-              SaaS for tile showrooms and interior teams
-            </p>
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-neutral-950 md:text-6xl">
-              Close sales faster with realistic tile previews.
-            </h1>
-            <p className="mt-5 max-w-xl text-base text-neutral-600 md:text-lg">
-              Give clients instant confidence by visualizing flooring options in real rooms. TilePro Gen turns texture catalogs into a premium buying experience.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                href={`/visualization?room=${activeRoom.id}`}
-                className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-neutral-800"
-              >
-                Start Visualising
-              </Link>
-              <Link
-                href="#features"
-                className="rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-              >
-                Explore Features
-              </Link>
+        <div className="grid gap-8 lg:grid-cols-[340px_1fr]">
+          {/* Left: Upload Your Room — light gray border card */}
+          <section className="rounded-xl border border-neutral-200 bg-white p-6">
+            <h2 className="text-base font-bold text-neutral-800">Upload Your Room</h2>
+            <div
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              className={`mt-4 flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50/80 px-6 py-10 transition-colors ${
+                dragOver ? 'border-neutral-400 bg-neutral-100' : ''
+              }`}
+            >
+              <span className="text-4xl font-light text-neutral-500" aria-hidden>↑</span>
+              <p className="mt-3 text-center text-sm text-neutral-600">
+                Drag and drop your photo here
+              </p>
+              <p className="mt-0.5 text-center text-sm text-neutral-600">or</p>
             </div>
-            <div className="mt-6 flex flex-wrap gap-5 text-xs text-neutral-500">
-              <span>Fast setup</span>
-              <span>Real-time switching</span>
-              <span>Quote-ready workflow</span>
-            </div>
-          </div>
+            <button
+              type="button"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-700 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-800"
+            >
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              Choose File
+            </button>
+            <p className="mt-4 text-xs text-neutral-500">
+              <span className="font-semibold text-neutral-600">Tip:</span> For best results, use a well-lit photo showing the wall area clearly.
+            </p>
+          </section>
 
-          <section className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_25px_70px_-45px_rgba(0,0,0,0.5)]">
-            <div className="relative flex items-center justify-between border-b border-neutral-100 px-5 py-3 md:px-6">
-              <p className="text-sm font-medium text-neutral-700">{activeRoom.title}</p>
-              <Link
-                href={`/visualization?room=${activeRoom.id}`}
-                className="text-sm font-medium text-neutral-900 transition-colors hover:text-neutral-600"
-              >
-                Open visualiser →
-              </Link>
+          {/* Right: Preview — "Currently showing" and icons on same row */}
+          <section className="rounded-xl border border-neutral-200 bg-white p-6">
+            <h2 className="text-base font-bold text-neutral-800">Preview</h2>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-neutral-600">Currently showing: {CURRENT_TILE_LABEL}</p>
+              <div className="flex items-center gap-1">
+                <button type="button" className="rounded p-1.5 text-neutral-600 hover:bg-neutral-100" aria-label="Undo">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                </button>
+                <button type="button" className="rounded p-1.5 text-neutral-600 hover:bg-neutral-100" aria-label="Full screen">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                </button>
+                <button type="button" className="rounded p-1.5 text-neutral-600 hover:bg-neutral-100" aria-label="Download">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                </button>
+                <button type="button" className="rounded p-1.5 text-neutral-600 hover:bg-neutral-100" aria-label="Share">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6 3m-6-3l6-3m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                </button>
+              </div>
             </div>
-            <div className="relative aspect-[16/10] bg-neutral-100">
+            <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
               <RoomViewer
-                roomUrl={activeRoom.roomUrl}
+                roomUrl={previewRoom.roomUrl}
                 wallTextureUrl={null}
                 floorTextureUrl={null}
-                wallMaskUrl={activeRoom.wallMaskUrl}
-                floorMaskUrl={activeRoom.floorMaskUrl}
-                wallMaskInvert={activeRoom.floorMaskInvert}
-                floorMaskInvert={activeRoom.floorMaskInvert}
-                floorQuad={activeRoom.floorQuad}
-                tileScale={activeRoom.tileScale}
+                wallMaskUrl={null}
+                floorMaskUrl={previewRoom.floorMaskUrl}
+                wallMaskInvert={false}
+                floorMaskInvert={previewRoom.floorMaskInvert}
+                floorQuad={previewRoom.floorQuad}
+                tileScale={previewRoom.tileScale}
               />
             </div>
+            <Link
+              href={`/visualization?room=${previewRoom.id}`}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-700 px-4 py-3 text-sm font-semibold text-white hover:bg-neutral-800"
+            >
+              Start Visualization
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </Link>
           </section>
-        </section>
+        </div>
 
-        <section id="features" className="mt-16 grid gap-4 md:grid-cols-3">
-          {FEATURES.map((feature) => (
-            <article key={feature.title} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <h3 className="text-base font-semibold text-neutral-900">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-neutral-600">{feature.description}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="mt-14 rounded-2xl border border-neutral-200 bg-white p-6 md:p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-neutral-900">How it works</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {STEPS.map((step) => (
-              <div key={step.title} className="rounded-xl bg-neutral-50 p-4">
-                <p className="text-sm font-semibold text-neutral-900">{step.title}</p>
-                <p className="mt-2 text-sm text-neutral-600">{step.description}</p>
+        {/* Try Our Demo Rooms — title centered, top row with images, bottom row empty placeholders */}
+        <section className="mt-12">
+          <h2 className="text-center text-xl font-bold text-neutral-800">Try Our Demo Rooms</h2>
+          <p className="mt-2 text-center text-sm text-neutral-600">
+            Don&apos;t have a photo? Explore our demo rooms to see how different tiles look.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Top row: 3 cards with images */}
+            {DEMO_ROOMS.map((room, i) => (
+              <Link
+                key={`filled-${i}`}
+                href={`/visualization?room=${room.id}`}
+                className="group overflow-hidden rounded-xl border border-neutral-200 bg-white transition-shadow hover:shadow-md"
+              >
+                <div className="relative aspect-[4/3] bg-neutral-100">
+                  <Image
+                    src={room.roomUrl}
+                    alt={room.title}
+                    fill
+                    className="object-cover transition-transform group-hover:scale-[1.02]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                </div>
+                <p className="p-4 text-center text-sm font-medium text-neutral-800">{room.title}</p>
+              </Link>
+            ))}
+            {/* Bottom row: 3 empty placeholder cards with same labels */}
+            {DEMO_ROOMS.map((room, i) => (
+              <div
+                key={`placeholder-${i}`}
+                className="overflow-hidden rounded-xl border border-neutral-200 bg-white"
+              >
+                <div className="aspect-[4/3] bg-neutral-50" />
+                <p className="p-4 text-center text-sm font-medium text-neutral-800">{room.title}</p>
               </div>
             ))}
           </div>
         </section>
-
-        <section className="mt-14 rounded-2xl bg-neutral-900 px-6 py-10 text-center text-white md:px-12">
-          <h2 className="text-3xl font-semibold tracking-tight">Ready to modernize your tile sales?</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-neutral-300 md:text-base">
-            Launch interactive room previews for your clients and improve confidence before purchase.
-          </p>
-          <div className="mt-7">
-            <Link
-              href={`/visualization?room=${activeRoom.id}`}
-              className="inline-flex rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 transition-colors hover:bg-neutral-100"
-            >
-              Open Visualiser Now
-            </Link>
-          </div>
-        </section>
-
-        <footer className="mt-10 border-t border-neutral-200 pt-6 text-center">
-          <p className="text-xs text-neutral-400">© TilePro Gen</p>
-        </footer>
       </div>
     </main>
   );

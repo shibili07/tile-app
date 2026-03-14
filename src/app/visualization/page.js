@@ -95,7 +95,7 @@ function VisualizationContent() {
         <div className="flex-shrink-0 p-6 border-b border-neutral-100">
           <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-[11px] font-medium text-neutral-600">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            SaaS Visualizer
+            Tile visualiser
           </div>
           <h1 className="mt-3 text-lg font-semibold text-neutral-900 tracking-tight">
             TilePro Gen
@@ -235,7 +235,6 @@ function VisualizationContent() {
                 wallQuad={activeRoom.wallQuad ?? null}
                 floorQuad={activeRoom.floorQuad ?? null}
                 tileScale={activeRoom.tileScale ?? 1.0}
-                normalMapUrl={selectedFloorTile?.normalMapUrl ?? null}
               />
             </div>
           </div>
