@@ -1,28 +1,19 @@
 import { NextResponse } from 'next/server';
 
 const tiles = [
+  
     {
-        id: 13,
-        name: "Marble Polished Floor",
-        slug: "marble-polished-floor",
-        textureUrl: "/textures/close-up-marble-textured-wall.jpg",
-        price: 72.00,
+        id: 23,
+        name: "Travertine",
+        slug: "travertine-stone-tile",
+        textureUrl:"/textures/drag-textured-plaster-1499-mm-architextures.jpg",
+        price: 66.00,
         category: "Floors",
-        size: "60x120cm",
-        finish: "Polished",
-        material: "Marble",
-    },
-    {
-        id: 7,
-        name: "Natural Stone Mosaic Floor",
-        slug: "natural-stone-mosaic",
-        textureUrl: "/images/tile-4.jpg",
-        price: 48.00,
-        category: "Floors",
-        size: "30x30cm",
+        size: "60x60cm",
         finish: "Matt",
-        material: "Stone",
+        material: "Ceramic",
     },
+
     {
         id: 15,
         name: "Diagonal White Marble Tile",
@@ -33,6 +24,17 @@ const tiles = [
         size: "200x200cm",
         finish: "Polished",
         material: "Marble",
+    },
+    {
+        id: 20,
+        name: "Travertine",
+        slug: "travertine-stone-tile",
+        textureUrl: "/textures/515.png",
+        price: 66.00,
+        category: "Floors",
+        size: "60x60cm",
+        finish: "Matt",
+        material: "Ceramic",
     },
     {
         id: 16,
@@ -68,15 +70,15 @@ const tiles = [
         material: "Ceramic",
     },
     {
-        id: 20,
-        name: "Travertine",
-        slug: "travertine-stone-tile",
-        textureUrl: "/textures/515.png",
-        price: 66.00,
+        id: 7,
+        name: "Natural Stone Mosaic Floor",
+        slug: "natural-stone-mosaic",
+        textureUrl: "/textures/demi-rustic-finish-in-ter-08-500-mm-architextures.jpg",
+        price: 48.00,
         category: "Floors",
-        size: "60x60cm",
+        size: "30x30cm",
         finish: "Matt",
-        material: "Ceramic",
+        material: "Stone",
     },
     {
         id: 21,
@@ -100,18 +102,7 @@ const tiles = [
         finish: "Matt",
         material: "Ceramic",
     },
-    {
-        id: 23,
-        name: "Travertine",
-        slug: "travertine-stone-tile",
-        textureUrl:"/textures/drag-textured-plaster-1499-mm-architextures.jpg",
-        price: 66.00,
-        category: "Floors",
-        size: "60x60cm",
-        finish: "Matt",
-        material: "Ceramic",
-    },
-
+    
 ];
 
 export async function GET() {
