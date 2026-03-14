@@ -20,6 +20,13 @@ export default function RoomViewer({
     const canvasRef    = useRef();
     const cacheRef     = useRef({});
     const drawFnRef    = useRef(null);
+    const drawSeqRef   = useRef(0);
+
+    const setHighQuality = (ctx) => {
+        if (!ctx) return;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+    };
 
     // ── Image loader with cache ──────────────────────────────────────────────
     const loadImg = (url) => new Promise((resolve) => {
@@ -35,16 +42,23 @@ export default function RoomViewer({
     const buildTiledTexture = (img, rX, rY) => {
         const tW = Math.round(BASE_TILE_PX * tileScale);
         const tH = Math.round(tW * (img.naturalHeight / img.naturalWidth));
+        const TILE_OVERDRAW = 1.25;
 
         const canvas = document.createElement('canvas');
         canvas.width  = tW * rX;
         canvas.height = tH * rY;
         const ctx = canvas.getContext('2d');
+        setHighQuality(ctx);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         for (let row = 0; row < rY; row++)
             for (let col = 0; col < rX; col++)
                 ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight,
-                    col * tW, row * tH, tW, tH);
+                    col * tW - TILE_OVERDRAW / 2,
+                    row * tH - TILE_OVERDRAW / 2,
+                    tW + TILE_OVERDRAW,
+                    tH + TILE_OVERDRAW);
 
         return canvas;
     };
@@ -65,12 +79,44 @@ export default function RoomViewer({
         return off;
     };
 
-    // ── Perspective-correct texture mapping (100 affine strips) ─────────────
+    // ── Build neutral (grayscale) room shading to preserve tile color ───────
+    const makeNeutralShading = (roomImg, w, h, maskCanvas, strength = 0.3) => {
+        if (!roomImg) return null;
+        const shade = document.createElement('canvas');
+        shade.width = w;
+        shade.height = h;
+        const shadeCtx = shade.getContext('2d');
+        setHighQuality(shadeCtx);
+        shadeCtx.drawImage(roomImg, 0, 0, w, h);
+
+        const imgData = shadeCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+            // Neutral luminance retains light/shadow but removes color tint.
+            const lum = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+            const boosted = Math.min(255, lum * 1.06);
+            d[i] = boosted;
+            d[i + 1] = boosted;
+            d[i + 2] = boosted;
+            d[i + 3] = Math.round(d[i + 3] * strength);
+        }
+        shadeCtx.putImageData(imgData, 0, 0);
+
+        // Keep shading only where floor mask exists.
+        shadeCtx.globalCompositeOperation = 'destination-in';
+        shadeCtx.drawImage(maskCanvas, 0, 0);
+        shadeCtx.globalCompositeOperation = 'source-over';
+        return shade;
+    };
+
+    // ── Perspective-correct texture mapping with seam protection ─────────────
     const drawPerspective = (ctx, tex, nQuad, cW, cH) => {
+        setHighQuality(ctx);
         const px = nQuad.map(([nx, ny]) => [nx * cW, ny * cH]);
         const [tl, tr, br, bl] = px;
         const tW = tex.width, tH = tex.height;
-        const STEPS = 100;
+        const STEPS = 140;
+        const EDGE_OVERLAP = 0.0015;
 
         const wTop = Math.hypot(tr[0] - tl[0], tr[1] - tl[1]);
         const wBot = Math.hypot(br[0] - bl[0], br[1] - bl[1]);
@@ -84,14 +130,15 @@ export default function RoomViewer({
 
         for (let i = 0; i < STEPS; i++) {
             const t0 = i / STEPS, t1 = (i + 1) / STEPS;
-            const sv0 = pV(t0) * tH, sv1 = pV(t1) * tH;
+            const t1Edge = Math.min(1, t1 + EDGE_OVERLAP);
+            const sv0 = pV(t0) * tH, sv1 = pV(t1Edge) * tH;
             const sH = sv1 - sv0;
             if (sH < 0.05) continue;
 
             const x0L = tl[0] + (bl[0] - tl[0]) * t0, y0L = tl[1] + (bl[1] - tl[1]) * t0;
             const x0R = tr[0] + (br[0] - tr[0]) * t0, y0R = tr[1] + (br[1] - tr[1]) * t0;
-            const x1L = tl[0] + (bl[0] - tl[0]) * t1, y1L = tl[1] + (bl[1] - tl[1]) * t1;
-            const x1R = tr[0] + (br[0] - tr[0]) * t1, y1R = tr[1] + (br[1] - tr[1]) * t1;
+            const x1L = tl[0] + (bl[0] - tl[0]) * t1Edge, y1L = tl[1] + (bl[1] - tl[1]) * t1Edge;
+            const x1R = tr[0] + (br[0] - tr[0]) * t1Edge, y1R = tr[1] + (br[1] - tr[1]) * t1Edge;
 
             ctx.save();
             ctx.beginPath();
@@ -112,6 +159,7 @@ export default function RoomViewer({
 
     // ── Flat tiled fill ──────────────────────────────────────────────────────
     const drawFlat = (ctx, tex, w, h) => {
+        setHighQuality(ctx);
         const scale = Math.max(w, h) / tex.width;
         const pat = ctx.createPattern(tex, 'repeat');
         pat.setTransform(new DOMMatrix([scale, 0, 0, scale, 0, 0]));
@@ -121,43 +169,65 @@ export default function RoomViewer({
 
     // ── Render one surface (wall or floor) ───────────────────────────────────
     const renderSurface = async (ctx, w, h, {
-        textureUrl, maskUrl, maskInvert, quad, rX, rY, opacity,
+        textureUrl, maskUrl, maskInvert, quad, rX, rY, opacity, blendMode = 'multiply',
+        roomImg = null, roomShadeStrength = 0, renderScale = 1, drawId = 0,
     }) => {
         const [tileImg, maskImg] = await Promise.all([
             loadImg(textureUrl),
             loadImg(maskUrl),
         ]);
+        if (drawId !== drawSeqRef.current) return;
         if (!tileImg || !maskImg) return;
 
         // 1. Build colour texture
         const tex = buildTiledTexture(tileImg, rX, rY);
 
         // 2. Draw texture (perspective or flat) to offscreen canvas
+        const offW = Math.max(1, Math.round(w * renderScale));
+        const offH = Math.max(1, Math.round(h * renderScale));
         const off = document.createElement('canvas');
-        off.width = w; off.height = h;
+        off.width = offW;
+        off.height = offH;
         const offCtx = off.getContext('2d');
+        setHighQuality(offCtx);
 
-        if (quad) drawPerspective(offCtx, tex, quad, w, h);
-        else      drawFlat(offCtx, tex, w, h);
+        if (quad) drawPerspective(offCtx, tex, quad, offW, offH);
+        else      drawFlat(offCtx, tex, offW, offH);
 
         // 3. Clip to mask
-        const mask = makeMask(maskImg, w, h, maskInvert);
+        const mask = makeMask(maskImg, offW, offH, maskInvert);
         offCtx.globalCompositeOperation = 'destination-in';
         offCtx.drawImage(mask, 0, 0);
 
-        // 4. Multiply blend so room shadows pass through the tiles
-        ctx.globalCompositeOperation = 'multiply';
+        // 4. Blend into room (multiply for realism, source-over for true color)
+        if (drawId !== drawSeqRef.current) return;
+        ctx.globalCompositeOperation = blendMode;
         ctx.globalAlpha = opacity;
-        ctx.drawImage(off, 0, 0);
+        ctx.drawImage(off, 0, 0, w, h);
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
+
+        // 5. Optional neutral shading pass for natural blending without tinting.
+        if (roomImg && roomShadeStrength > 0) {
+            const shadeMask = makeMask(maskImg, w, h, maskInvert);
+            const neutralShade = makeNeutralShading(roomImg, w, h, shadeMask, roomShadeStrength);
+            if (drawId !== drawSeqRef.current) return;
+            if (neutralShade) {
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.globalAlpha = 1;
+                ctx.drawImage(neutralShade, 0, 0);
+                ctx.globalCompositeOperation = 'source-over';
+            }
+        }
     };
 
     // ── Main draw
     const draw = async () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+        const drawId = ++drawSeqRef.current;
         const ctx = canvas.getContext('2d');
+        setHighQuality(ctx);
         const w = canvas.width, h = canvas.height;
         ctx.clearRect(0, 0, w, h);
 
@@ -166,20 +236,22 @@ export default function RoomViewer({
         ctx.fillRect(0, 0, w, h);
 
         const roomImg = await loadImg(roomUrl);
+        if (drawId !== drawSeqRef.current) return;
         if (roomImg) ctx.drawImage(roomImg, 0, 0, w, h);
 
         if (wallMaskUrl && wallTextureUrl)
             await renderSurface(ctx, w, h, {
                 textureUrl: wallTextureUrl, maskUrl: wallMaskUrl,
                 maskInvert: wallMaskInvert, quad: wallQuad,
-                rX: 8, rY: 8, opacity: 0.88, isFloor: false,
+                rX: 8, rY: 8, opacity: 0.88, drawId, isFloor: false,
             });
 
         if (floorMaskUrl && floorTextureUrl)
             await renderSurface(ctx, w, h, {
                 textureUrl: floorTextureUrl, maskUrl: floorMaskUrl,
                 maskInvert: floorMaskInvert, quad: floorQuad,
-                rX: 6, rY: 6, opacity: 0.92, isFloor: true,
+                rX: 6, rY: 6, opacity: 1, blendMode: 'source-over',
+                roomImg, roomShadeStrength: 0.32, renderScale: 2, drawId, isFloor: true,
             });
     };
 

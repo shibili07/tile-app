@@ -14,7 +14,7 @@ const ROOMS = [
     wallMaskUrl: null,
     floorMaskUrl: '/rooms/bathroom1/floor-mask.jpeg',
     floorMaskInvert: true,
-    floorQuad: [[0.2, 0.54], [0.8, 0.54], [1.15, 1.0], [-0.15, 1.0]],
+    floorQuad: [[0.12, 0.54], [0.88, 0.54], [1.32, 1.02], [-0.32, 1.02]],
     tileScale: 1.0,
     wallPos: null,
     floorPos: { bottom: '25%', left: '50%' },
