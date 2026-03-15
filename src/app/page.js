@@ -33,19 +33,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white text-neutral-800">
-      {/* Header: Victorian Plumbing logo on black */}
-      <header className="px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center">
-          <Image
-            src="/logo.png"
-            alt="Victorian Plumbing.co.uk"
-            width={200}
-            height={52}
-            className="h-10 w-auto object-contain object-left"
-            priority
-          />
-        </div>
-      </header>
       <div className="mx-auto max-w-6xl px-6 py-6">
 
         <div className="grid gap-8 lg:grid-cols-[340px_1fr]">
